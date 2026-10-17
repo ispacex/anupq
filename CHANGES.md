@@ -18,6 +18,9 @@ the ANUPQ package.
   satisfy the law asked for by the option `Exponent` or `Metabelian`
   (for example `C8 x C2` with `Exponent := 4`); it now returns `[]`, as
   no descendant satisfies the law either
+* Fix `PqStandardPresentation` and `StandardPresentation` hanging when
+  the option `Relators` defines a group of another rank than the group
+  given
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
