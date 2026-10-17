@@ -26,6 +26,9 @@ the ANUPQ package.
   are not its pcgs refining the lower exponent-p central series (for
   example `AbelianGroup(IsPcGroup, [4, 2])`): the map returned was not
   bijective
+* Fix `PqDescendants` for an interactive process returning, besides the
+  descendants, the groups an earlier command of the same process had
+  written (for example by `PqPGConstructDescendants`)
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
