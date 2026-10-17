@@ -14,6 +14,10 @@ the ANUPQ package.
   and wrong stabilisers passed on to them, when the soluble orbit
   algorithm gets 127 or more automorphisms: the `pq` program counted
   them in `char` variables, which wrapped around
+* Fix `PqDescendants` crashing the `pq` program when the group does not
+  satisfy the law asked for by the option `Exponent` or `Metabelian`
+  (for example `C8 x C2` with `Exponent := 4`); it now returns `[]`, as
+  no descendant satisfies the law either
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
