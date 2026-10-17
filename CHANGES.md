@@ -34,6 +34,8 @@ the ANUPQ package.
   by `PqDescendants`, as the files written by `pq` do
 * Fix `PqPGSupplyAutomorphisms` with the option `RelativeOrders`
   sending wrong relative orders to `pq`, or failing with an error
+* Fix `IsIsomorphicPGroup` and `IsPqIsomorphicPGroup` raising an error
+  for two trivial groups
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
