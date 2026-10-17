@@ -9,6 +9,11 @@ the ANUPQ package.
   in the group's pcgs but read by `pq` in its own, so they were wrong maps.
   This gave wrong descendants (7 instead of 10 for that example) or crashed
   the `pq` program
+* Fix wrong descendants (for example, 16384 instead of 26 step-1
+  descendants of the abelian group of type [2^3, 2^5, 2^7, 2^9, 2^11]),
+  and wrong stabilisers passed on to them, when the soluble orbit
+  algorithm gets 127 or more automorphisms: the `pq` program counted
+  them in `char` variables, which wrapped around
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
