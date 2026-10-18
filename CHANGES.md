@@ -3,6 +3,10 @@ the ANUPQ package.
 
 ## 3.4.0 (unreleased)
 
+* Fix wrong standard presentations, or crashes of the `pq` program, from
+  `StandardPresentation` with the option `pQuotient` when the pcgs of the
+  given quotient is not the pcp `pq` computes for it: its automorphisms
+  were sent in the pcgs of the quotient, but `pq` reads them in its own pcp
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after

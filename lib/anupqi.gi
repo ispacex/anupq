@@ -2554,6 +2554,38 @@ end );
 
 #############################################################################
 ##
+#F  PQ_SP_QUOTIENT( <datarec>, <Q> ) . . . . . pq's own pcp of the p-quotient
+##
+##  returns the class $c$ $p$-quotient of `<datarec>.group' with the pcp that
+##  the `pq' binary computed for it under option 1 of the Standard Presentation
+##  menu, as a pc group whose family pcgs is that  pcp.  <Q>  is  the  value  of
+##  option `pQuotient', a pc group isomorphic to it, whose pcgs need not be the
+##  same. The current pcp of `pq' is that of the $p$-cover; its first generators
+##  are those of the $p$-quotient, the others span the multiplicator.
+##
+InstallGlobalFunction( PQ_SP_QUOTIENT, function( datarec, Q )
+  local file, result, F, fpcgs, n, nat, P;
+
+  file := Filename( ANUPQData.tmpdir, "PQ_sp_pcp" );
+  PushOptions( rec(nonuser := true) );
+  PQ_WRITE_PC_PRESENTATION( datarec, file );
+  PopOptions();
+  result := PQ_READ_AS_FUNC_WITH_VARS( file, [ "F", "MapImages" ] );
+  F := result.F;
+  fpcgs := FamilyPcgs( F );
+  n := Length( Pcgs( Q ) );
+  nat := NaturalHomomorphismByNormalSubgroupNC( F,
+             SubgroupNC( F, fpcgs{[n + 1 .. Length( fpcgs )]} ) );
+  P := GroupByPcgs( PcgsByPcSequence( FamilyObj( One( Image( nat ) ) ),
+                        List( fpcgs{[1 .. n]}, x -> Image( nat, x ) ) ) );
+  if Size( P ) <> Size( Q ) then
+    Error( "option `pQuotient' is not the p-quotient of the group\n" );
+  fi;
+  return P;
+end );
+
+#############################################################################
+##
 #F  PQ_SP_STANDARD_PRESENTATION(<datarec>[,<mlist>] :<options>) SP menu opt 2
 ##
 ##  inputs data given by <options> to the `pq' binary to compute  a  standard
@@ -2565,19 +2597,28 @@ end );
 ##  Presentation menu.
 ##
 InstallGlobalFunction( PQ_SP_STANDARD_PRESENTATION, function( arg )
-local datarec, savefile;
+local datarec, savefile, Q;
   datarec := arg[1];
   savefile := PQ_CHK_PATH( 
                   VALUE_PQ_OPTION( "StandardPresentationFile",
                                    Filename( ANUPQData.tmpdir, "SPres" ) ),
                   "w", datarec);
+  ##  `pq' reads the automorphisms in its own pcp of the p-quotient, which
+  ##  need not be the pcgs of `<datarec>.pQuotient': use that pcp's group.
+  if 1 = Length(arg) then
+    if IsBound( datarec.setupfile ) then
+      Q := datarec.pQuotient;
+    else
+      Q := PQ_SP_QUOTIENT( datarec, datarec.pQuotient );
+    fi;
+  fi;
   PQ_MENU(datarec, "SP");
   ToPQ(datarec, [ 2 ], [ "  #compute standard presentation" ]);
   ToPQ(datarec, [ savefile ], [ "  #file for saving pres'n" ]);
   ToPQ(datarec, [ VALUE_PQ_OPTION("ClassBound", 63)], [ "  #class bound" ]);
 
   if 1 = Length(arg) then
-    PQ_AUT_INPUT( datarec, datarec.pQuotient );
+    PQ_AUT_INPUT( datarec, Q );
   else
     PQ_MANUAL_AUT_INPUT( datarec, arg[2] );
   fi;
