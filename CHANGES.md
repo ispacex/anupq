@@ -46,6 +46,10 @@ the ANUPQ package.
   to the p-quotient (`PqSupplyAutomorphisms`, or option 18 of the Advanced
   p-Quotient menu): the queue of redundant generators was only enlarged
   from class 3 on, and `pq` wrote past its end
+* Fix the relative orders that `PqDescendants` attaches to each
+  descendant (the `relativeOrders` field of `ANUPQAutomorphisms`, the
+  `agOrder` field of `PqSupplementInnerAutomorphisms`), which had their
+  last entry repeated: the `pq` program wrote it twice
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
