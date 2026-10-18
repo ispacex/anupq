@@ -50,6 +50,10 @@ the ANUPQ package.
   descendant (the `relativeOrders` field of `ANUPQAutomorphisms`, the
   `agOrder` field of `PqSupplementInnerAutomorphisms`), which had their
   last entry repeated: the `pq` program wrote it twice
+* Fix the `pq` program writing past the end of its workspace, instead of
+  stopping with "Ran out of space during computation", when the Schreier
+  words of a stabiliser do not fit; this happened when the automorphisms
+  it was given were not automorphisms of the group
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
