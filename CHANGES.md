@@ -79,6 +79,9 @@ the ANUPQ package.
   sequence, but nothing made them one or checked it. They are now passed as
   one when the automorphism group is soluble, and otherwise the option is an
   error
+* Make the `pq` program exit cleanly when the number of allowable
+  subgroups overflows (issue #32); under GAP it carried on with a
+  partial count and crashed after reporting the overflow
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
