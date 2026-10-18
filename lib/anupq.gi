@@ -221,6 +221,8 @@ InstallGlobalFunction( PQ_GROUP_FROM_PCP, function( datarec, out )
     else
       if IsBound(datarec.pcgs) then
         gens := datarec.pcgs;
+      elif IsBound(datarec.pqgens) then
+        gens := datarec.pqgens;
       else
         gens := GeneratorsOfGroup( datarec.group );
       fi;

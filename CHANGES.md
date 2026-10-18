@@ -21,6 +21,12 @@ the ANUPQ package.
 * Fix `PqStandardPresentation` and `StandardPresentation` hanging when
   the option `Relators` defines a group of another rank than the group
   given
+* Fix `PqEpimorphism`, `EpimorphismStandardPresentation` and
+  `EpimorphismPqStandardPresentation` for a pc group that is not a
+  p-group and whose generators are not its pcgs: the map returned was not
+  a homomorphism, or not onto, or `PqEpimorphism` failed with an error,
+  because `pq` was given a presentation on the pcgs but the map was built
+  on the generators
 * Fix `EpimorphismStandardPresentation` and
   `EpimorphismPqStandardPresentation` for a pc p-group whose generators
   are not its pcgs refining the lower exponent-p central series (for

@@ -223,6 +223,8 @@ function( args )
     # the elements of <datarec.group> pq was given as defining generators
     if IsBound( datarec.pcgs ) then
       generators := datarec.pcgs;
+    elif IsBound( datarec.pqgens ) then
+      generators := datarec.pqgens;
     else
       generators := GeneratorsOfGroup( datarec.group );
     fi;
