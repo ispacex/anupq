@@ -23,7 +23,10 @@ void exponent_info(struct exp_vars *exp_flag, struct pcp_vars *pcp)
    read_value(TRUE, "Accept default exponent checking? ", &Default, INT_MIN);
 
    if (Default) {
-      exp_flag->list = (pcp->m == 0) ? ALL_WORDS : REDUCED_LIST;
+      /* the reduced list is valid only if the redundancies found are
+         later closed under automorphisms which induce the full general
+         linear group, which is not done here */
+      exp_flag->list = ALL_WORDS;
       exp_flag->process = TRUE;
       exp_flag->complete = FALSE;
       exp_flag->partitions = FALSE;
