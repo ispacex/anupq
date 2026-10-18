@@ -36,6 +36,10 @@ the ANUPQ package.
   sending wrong relative orders to `pq`, or failing with an error
 * Fix `IsIsomorphicPGroup` and `IsPqIsomorphicPGroup` raising an error
   for two trivial groups
+* Fix crashes of the `pq` program in p-group generation for some primes,
+  for example p = 53 or 307, when `pq` is built with GMP: the order of the
+  automorphism group was saved as text directly in front of binary data
+  beginning with p, and was read back together with its first byte
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
