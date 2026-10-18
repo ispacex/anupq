@@ -643,6 +643,12 @@ DeclareGlobalFunction( "PqSPComputePcpAndPCover" );
 
 #############################################################################
 ##
+#F  PQ_SP_QUOTIENT( <datarec>, <Q> ) . . . . . pq's own pcp of the p-quotient
+##
+DeclareGlobalFunction( "PQ_SP_QUOTIENT" );
+
+#############################################################################
+##
 #F  PQ_SP_STANDARD_PRESENTATION(<datarec>[,<mlist>] :<options>) SP menu opt 2
 ##
 DeclareGlobalFunction( "PQ_SP_STANDARD_PRESENTATION" );

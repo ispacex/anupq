@@ -105,6 +105,10 @@ the ANUPQ package.
   soluble part was computed as if every soluble relative order were p
   (for the elementary abelian group of order 101^2 it came out as
   1020000/1030301 instead of 1030200), and AutPGrp cut its orbits short
+* Fix wrong standard presentations, or crashes of the `pq` program, from
+  `StandardPresentation` with the option `pQuotient` when the pcgs of the
+  given quotient is not the pcp `pq` computes for it: its automorphisms
+  were sent in the pcgs of the quotient, but `pq` reads them in its own pcp
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
