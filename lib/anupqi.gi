@@ -2995,7 +2995,7 @@ local nodescendants, class, firstStep, expectedNsteps, optrec, line, ngroups,
   if     VALUE_PQ_OPTION("SpaceEfficient", false, datarec.des) and 
      not VALUE_PQ_OPTION("PcgsAutomorphisms", false, datarec) then
     Info(InfoWarning + InfoANUPQ, 1,
-         "\"SpaceEfficient\" ignored since \"PcgsAutomorphisms\" is set.");
+         "\"SpaceEfficient\" ignored since \"PcgsAutomorphisms\" is not set.");
   fi;
 
   if not onestage then
