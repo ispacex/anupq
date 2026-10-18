@@ -46,6 +46,13 @@ the ANUPQ package.
   for example p = 53 or 307, when `pq` is built with GMP: the order of the
   automorphism group was saved as text directly in front of binary data
   beginning with p, and was read back together with its first byte
+* Fix wrong p-quotients (for example, order 2^18 instead of 2^12 for
+  B(2,4)) when an exponent law is enforced with automorphisms supplied to
+  the p-quotient (`PqSupplyAutomorphisms`, or option 18 of the Advanced
+  p-Quotient menu) that do not induce all of GL(d,p) on the Frattini
+  quotient, or when the group has relators: only a reduced list of words,
+  valid only for automorphisms inducing GL(d,p) on a relatively free
+  group, was tested; now all words are tested unless that holds
 * Fix wrong p-quotients (for example, order 2^26 instead of 2^8 for the
   free group of rank 8 with exponent 2) and crashes of the `pq` program
   when an exponent law is enforced at class 2 with automorphisms supplied
