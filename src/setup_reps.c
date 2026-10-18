@@ -7,6 +7,7 @@
 **
 */
 
+#include <stdlib.h>
 #include "pq_defs.h"
 #include "pcp_vars.h"
 #include "pga_vars.h"
@@ -222,15 +223,24 @@ void process_rep(int **perms,
    rank_of_cover = pcp->lastg;
    lused = pcp->lused;
 
-   stabiliser =
-       stabiliser_of_rep(perms, rep, orbit_length, a, b, c, d, auts, pga, pcp);
+   /* PQ_NOSTAB (MATH-72): the caller will not use the automorphism groups
+      of the descendants (they are leaves of its search), so skip their
+      stabilisers -- in an insoluble Aut(G) each is computed by GAP -- and
+      write no automorphisms for them to GAP_library */
+   if (pga->final_stage && getenv("PQ_NOSTAB") != NULL) {
+      pga->nmr_stabilisers = 0;
+      stabiliser = 0;
+   } else
+      stabiliser =
+          stabiliser_of_rep(perms, rep, orbit_length, a, b, c, d, auts, pga, pcp);
 
 #ifdef HAVE_GMP
    if (pga->final_stage)
       report_autgp_order(pga, pcp);
 #endif
 
-   if (pga->final_stage && (pga->capable || pga->terminal)) {
+   if (pga->final_stage && (pga->capable || pga->terminal) &&
+       getenv("PQ_NOSTAB") == NULL) {
       if (Group_library == GAP_LIBRARY) {
          GAP_library = OpenFile("GAP_library", "a+");
          GAP_auts(GAP_library, central, stabiliser, pga, pcp);
