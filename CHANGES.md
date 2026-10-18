@@ -82,6 +82,11 @@ the ANUPQ package.
 * Make the `pq` program exit cleanly when the number of allowable
   subgroups overflows (issue #32); under GAP it carried on with a
   partial count and crashed after reporting the overflow
+* Fix corrupted presentations, returned without any warning, when a class
+  needs more than 65535 pc generators (for example, class 2 of the free
+  group of rank 361 for the prime 2): the `pq` program checked this limit
+  only before a class, and larger generator numbers overflowed into other
+  fields. It now stops with an error, as when it runs out of space
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
