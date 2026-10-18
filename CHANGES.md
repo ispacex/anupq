@@ -3,6 +3,13 @@ the ANUPQ package.
 
 ## 3.4.0 (unreleased)
 
+* Fix wrong descendants with the option `PcgsAutomorphisms` (for example,
+  161 instead of 136 descendants of the elementary abelian group of order 4
+  up to class 3, and wrong ones for groups with an insoluble automorphism
+  group): the `pq` program takes the automorphisms for a PAG-generating
+  sequence, but nothing made them one or checked it. They are now passed as
+  one when the automorphism group is soluble, and otherwise the option is an
+  error
 * Fix intermittent crashes of the `pq` program when computing standard
   presentations, and wrong input in the example `2gp-SP-1-Rel-i`
 * Fix `pq` processes being left running, possibly at 100% CPU even after
