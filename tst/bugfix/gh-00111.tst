@@ -1,4 +1,4 @@
-gap> START_TEST( "epimorphism_non_pgroup.tst" );
+gap> START_TEST( "gh-00111.tst" );
 gap> SetInfoLevel( InfoANUPQ, 1 );
 
 # For a pc group that is not a p-group, pq was given a presentation on a
@@ -37,4 +37,4 @@ gap> List( [ B, D ], CheckSP );
 
 #
 gap> PqQuitAll();
-gap> STOP_TEST( "epimorphism_non_pgroup.tst", 1 );
+gap> STOP_TEST( "gh-00111.tst", 1 );
