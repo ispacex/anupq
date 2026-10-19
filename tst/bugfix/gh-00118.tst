@@ -1,4 +1,4 @@
-gap> START_TEST( "sp_pquotient_basis.tst" );
+gap> START_TEST( "gh-00118.tst" );
 gap> SetInfoLevel( InfoANUPQ, 1 );
 
 # With option pQuotient, the automorphisms of the given quotient were sent
@@ -25,4 +25,4 @@ true
 
 #
 gap> PqQuitAll();
-gap> STOP_TEST( "sp_pquotient_basis.tst", 1 );
+gap> STOP_TEST( "gh-00118.tst", 1 );
