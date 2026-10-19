@@ -1,4 +1,4 @@
-gap> START_TEST( "exponent_reduced_list.tst" );
+gap> START_TEST( "gh-00112.tst" );
 gap> SetInfoLevel( InfoANUPQ, 1 );
 
 # With automorphisms supplied, PqNextClass tested the exponent law only on
@@ -20,4 +20,4 @@ gap> PqFactoredOrder( procId );
 
 #
 gap> PqQuitAll();
-gap> STOP_TEST( "exponent_reduced_list.tst", 1 );
+gap> STOP_TEST( "gh-00112.tst", 1 );
