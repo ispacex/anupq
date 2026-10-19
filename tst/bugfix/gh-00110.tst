@@ -1,4 +1,4 @@
-gap> START_TEST( "pcgs_automorphisms.tst" );
+gap> START_TEST( "gh-00110.tst" );
 gap> SetInfoLevel( InfoANUPQ, 1 );
 
 # With PcgsAutomorphisms the pq program takes the automorphisms for a
@@ -24,4 +24,4 @@ a PAG-generating sequence of a soluble group, and they are not
 
 #
 gap> PqQuitAll();
-gap> STOP_TEST( "pcgs_automorphisms.tst", 1 );
+gap> STOP_TEST( "gh-00110.tst", 1 );
