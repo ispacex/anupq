@@ -21,6 +21,7 @@ gap> PqPGConstructDescendants( procId : ClassBound := 3,
 >                                       PcgsAutomorphisms );
 Error, option "PcgsAutomorphisms" needs the automorphisms to be
 a PAG-generating sequence of a soluble group, and they are not
+gap> if not IsEmpty( OptionsStack ) then ResetOptionsStack(); fi;
 
 #
 gap> PqQuitAll();
