@@ -35,8 +35,8 @@ DeclareGlobalFunction( "PQ_AUT_INPUT" );
 
 #############################################################################
 ##
-#F  PQ_IS_PAG_SEQUENCE( <mats> ) . . . . . is <mats> a PAG-generating sequence
-#F  PQ_CHK_PCGS_AUTS( <datarec> ) .  check the auts before `PcgsAutomorphisms'
+#F  PQ_IS_PAG_SEQUENCE( <mats> ) . . . .  is <mats> a PAG-generating sequence
+#F  PQ_CHK_PCGS_AUTS( <datarec> ) . check the auts before `PcgsAutomorphisms'
 ##
 DeclareGlobalFunction( "PQ_IS_PAG_SEQUENCE" );
 DeclareGlobalFunction( "PQ_CHK_PCGS_AUTS" );
