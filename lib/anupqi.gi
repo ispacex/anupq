@@ -64,6 +64,34 @@ end );
 
 #############################################################################
 ##
+#F  PQ_PCP_QUOTIENT( <datarec>, <n> ) . pq's pcp modulo its last generators
+##
+##  writes the current pcp of `pq' to a file and reads it back as a pc group
+##  <F>. If that pcp is a $p$-cover, its generators beyond the first <n>
+##  span the multiplicator. This returns a record with <F>, `MapImages' (the
+##  images of the defining generators in <F>), the natural epimorphism `nat'
+##  from <F> onto its quotient by the generators beyond the first <n>, and
+##  `pcgs', the images of the first <n> generators there.
+##
+InstallGlobalFunction( PQ_PCP_QUOTIENT, function( datarec, n )
+  local file, result, F, fpcgs, nat;
+
+  file := Filename( ANUPQData.tmpdir, "PQ_pcp_basis" );
+  PushOptions( rec(nonuser := true) );
+  PQ_WRITE_PC_PRESENTATION( datarec, file );
+  PopOptions();
+  result := PQ_READ_AS_FUNC_WITH_VARS( file, [ "F", "MapImages" ] );
+  F := result.F;
+  fpcgs := FamilyPcgs( F );
+  nat := NaturalHomomorphismByNormalSubgroupNC( F,
+             SubgroupNC( F, fpcgs{[n + 1 .. Length( fpcgs )]} ) );
+  return rec( F := F, MapImages := result.MapImages, nat := nat,
+              pcgs := PcgsByPcSequence( FamilyObj( One( Image( nat ) ) ),
+                        List( fpcgs{[1 .. n]}, x -> Image( nat, x ) ) ) );
+end );
+
+#############################################################################
+##
 #F  PQ_PCP_BASIS( <datarec> ) . . . . . . . pq's pcp in terms of the pc group
 ##
 ##  `<datarec>.group' is a pc group, given to `pq' by its pcgs
@@ -76,30 +104,18 @@ end );
 ##  its p-cover) to a file.
 ##
 InstallGlobalFunction( PQ_PCP_BASIS, function( datarec )
-  local file, result, F, fpcgs, n, nat, Q;
+  local n, pcp;
 
-  file := Filename( ANUPQData.tmpdir, "PQ_pcp_basis" );
-  PushOptions( rec(nonuser := true) );
-  PQ_WRITE_PC_PRESENTATION( datarec, file );
-  PopOptions();
-  result := PQ_READ_AS_FUNC_WITH_VARS( file, [ "F", "MapImages" ] );
-  F := result.F;
-  fpcgs := FamilyPcgs( F );
   n := Length( datarec.pcgs );
-  if result.MapImages{[1 .. n]} = fpcgs{[1 .. n]} then
+  pcp := PQ_PCP_QUOTIENT( datarec, n );
+  if pcp.MapImages{[1 .. n]} = FamilyPcgs( pcp.F ){[1 .. n]} then
     return fail;
   fi;
-  # if the current pcp is a p-cover, its last generators span the
-  # multiplicator
-  nat := NaturalHomomorphismByNormalSubgroupNC( F,
-             SubgroupNC( F, fpcgs{[n + 1 .. Length( fpcgs )]} ) );
-  Q := Image( nat );
-  return rec( epi := GroupHomomorphismByImagesNC( datarec.group, Q,
-                       datarec.pcgs,
-                       List( result.MapImages{[1 .. n]},
-                             x -> Image( nat, x ) ) ),
-              pcgs := PcgsByPcSequence( FamilyObj( One( Q ) ),
-                       List( fpcgs{[1 .. n]}, x -> Image( nat, x ) ) ) );
+  return rec( epi := GroupHomomorphismByImagesNC( datarec.group,
+                       Image( pcp.nat ), datarec.pcgs,
+                       List( pcp.MapImages{[1 .. n]},
+                             x -> Image( pcp.nat, x ) ) ),
+              pcgs := pcp.pcgs );
 end );
 
 #############################################################################
@@ -157,8 +173,8 @@ end );
 InstallGlobalFunction( PQ_AUT_INPUT, function( arg )
 
   local   datarec,  G,  basis,  autrec,  nrautos,  rank,  gens,  i,  aut,
-          j,  g,  exponents,  Exponents,  p,  mat,  M,  pcgs,  hom,  sol,  U,
-          V,  rels,  keep,  idx,  pcgsauts;
+          j,  g,  exponents,  Exponents,  p,  mat,  M,  pcgs,  hom,  sol,
+          U,  V,  rels,  keep,  idx,  pcgsauts;
 
   datarec := arg[1];
   G := arg[2];
@@ -410,7 +426,8 @@ end );
 ##  `"pQ"' (main $p$-Quotient menu) or `"SP' (Standard Presentation menu).
 ##
 InstallGlobalFunction( PQ_PC_PRESENTATION, function( datarec, menu )
-local gens, rels, p, fpgrp, iso, identities, pcgs, len, strp, i, j, Rel, line;
+local gens, rels, p, fpgrp, iso, identities, pcgs, len, strp, i, j, Rel,
+      line;
 
   p := VALUE_PQ_OPTION("Prime", fail, datarec); # "Prime" is a `global' option
   # p may also have been taken from a p-group, bypassing the option check;
@@ -433,8 +450,10 @@ local gens, rels, p, fpgrp, iso, identities, pcgs, len, strp, i, j, Rel, line;
   # pq reads the name as a single token (it stops at white space) and names
   # the descendant files <name>_class<c> after it, so keep it to one token
   datarec.GroupName := List( datarec.GroupName,
-                             function(c) if c in " \t\n\r" then return '_'; fi;
-                                         return c; end );
+                             function( c )
+                               if c in " \t\n\r" then return '_'; fi;
+                               return c;
+                             end );
   ToPQk(datarec, ["name ",  datarec.GroupName], []);
   ToPQk(datarec, ["prime ", p], []);
   if identities then
@@ -450,7 +469,10 @@ local gens, rels, p, fpgrp, iso, identities, pcgs, len, strp, i, j, Rel, line;
   fi;
   ToPQk(datarec, ["output ", VALUE_PQ_OPTION("OutputLevel", 0, datarec)], []);
 
+  # <datarec.pqgens> are the elements of <datarec.group> that pq is given
+  # as its defining generators
   if IsFpGroup(datarec.group) then
+    datarec.pqgens := GeneratorsOfGroup(datarec.group);
     gens := FreeGeneratorsOfFpGroup(datarec.group);
     rels := VALUE_PQ_OPTION("Relators", datarec);
     if rels = fail then
@@ -459,8 +481,8 @@ local gens, rels, p, fpgrp, iso, identities, pcgs, len, strp, i, j, Rel, line;
       Info(InfoANUPQ, 2, "Relators parsed ok.");
     fi;
   elif not( IsPGroup(datarec.group) ) then
-    # pq is given a presentation on the generators of <fpgrp>; remember the
-    # elements of <datarec.group> they stand for (not GeneratorsOfGroup)
+    # pq is given a presentation on the generators of <fpgrp>, which stand
+    # for these elements, not for GeneratorsOfGroup(datarec.group)
     iso := IsomorphismFpGroup( datarec.group );
     fpgrp := Range( iso );
     datarec.pqgens := List( GeneratorsOfGroup(fpgrp),
@@ -470,6 +492,7 @@ local gens, rels, p, fpgrp, iso, identities, pcgs, len, strp, i, j, Rel, line;
   else
     pcgs := PcgsPCentralSeriesPGroup(datarec.group);
     datarec.pcgs := pcgs;
+    datarec.pqgens := pcgs;
     len  := Length(pcgs);
     gens := List( [1..len], i -> Concatenation( "g", String(i) ) );
     strp := String(p);
@@ -2083,6 +2106,47 @@ end );
 
 #############################################################################
 ##
+#F  PQ_CHK_EXPONENT_AUTS( <datarec>, <mlist> ) . . auts enough for exponent?
+##
+##  With automorphisms supplied, the `pq' program enforces an exponent law
+##  by testing only a reduced list of words and closing the relations found
+##  under the automorphisms (see `extra_relations.c'). That is enough only
+##  if the group is relatively free (no relators, no metabelian law) and the
+##  automorphisms induce the full general linear group on its Frattini
+##  quotient; otherwise the $p$-quotient comes out too big. This signals an
+##  error unless that holds or no exponent law is enforced.
+##
+InstallGlobalFunction( PQ_CHK_EXPONENT_AUTS, function( datarec, mlist )
+  local p, d, rels, mats;
+
+  if VALUE_PQ_OPTION("Exponent", 0, datarec) = 0 then
+    return;
+  fi;
+  p := VALUE_PQ_OPTION("Prime", fail, datarec);
+  d := Length( mlist[1] );
+  if IsFpGroup( datarec.group ) then
+    rels := VALUE_PQ_OPTION("Relators", datarec);
+    if rels = fail then
+      rels := RelatorsOfFpGroup( datarec.group );
+    fi;
+  else
+    rels := fail; # a presentation of a pc group has relations
+  fi;
+  ##  the action on the Frattini quotient: the images of its d generators,
+  ##  modulo the generators of higher weight
+  mats := List( mlist, m -> List( m, row -> row{[1 .. d]} ) * One( GF(p) ) );
+  if rels <> [] or VALUE_PQ_OPTION("Metabelian", false, datarec) = true or
+     ForAny( mats, m -> RankMat( m ) < d ) or
+     Size( Group( mats ) ) <> Size( GL( d, p ) ) then
+    Error( "with an exponent law, the automorphisms must induce ",
+           "GL(", d, ", ", p, ") on the\n",
+           "Frattini quotient of a group without relators ",
+           "or metabelian law" );
+  fi;
+end );
+
+#############################################################################
+##
 #F  PQ_SUPPLY_OR_EXTEND_AUTOMORPHISMS(<datarec>[,<mlist>])  A p-Q menu opt 18
 ##
 ##  inputs data to the `pq' binary for option 18 of the Advanced $p$-Quotient
@@ -2093,6 +2157,9 @@ end );
 InstallGlobalFunction( PQ_SUPPLY_OR_EXTEND_AUTOMORPHISMS, function( arg )
 local datarec;
   datarec := arg[1];
+  if 2 = Length(arg) then
+    PQ_CHK_EXPONENT_AUTS( datarec, arg[2] );
+  fi;
   PQ_MENU(datarec, "ApQ"); #we need options from the Advanced p-Q Menu
   if 1 = Length(arg) then
     ToPQ(datarec, [ 18 ], [ " #extend auts" ]);
@@ -2114,6 +2181,11 @@ end );
 ##  same dimensions; in particular, the number of rows of each matrix must be
 ##  the number of pc generators of the  current  $p$-quotient  of  the  group
 ##  associated with the interactive {\ANUPQ} process.
+##
+##  If an exponent law is enforced, the automorphisms must induce the  full
+##  general linear group on the Frattini quotient of a group given without
+##  relators and without the metabelian law; otherwise an error is signalled
+##  (see `PQ_CHK_EXPONENT_AUTS').
 ##
 ##  *Note:*
 ##  For those familiar with the  `pq'  binary,  `PqSupplyAutomorphisms'  uses
@@ -2583,38 +2655,6 @@ end );
 
 #############################################################################
 ##
-#F  PQ_SP_QUOTIENT( <datarec>, <Q> ) . . . . . pq's own pcp of the p-quotient
-##
-##  returns the class $c$ $p$-quotient of `<datarec>.group' with the pcp that
-##  the `pq' binary computed for it under option 1 of the Standard Presentation
-##  menu, as a pc group whose family pcgs is that  pcp.  <Q>  is  the  value  of
-##  option `pQuotient', a pc group isomorphic to it, whose pcgs need not be the
-##  same. The current pcp of `pq' is that of the $p$-cover; its first generators
-##  are those of the $p$-quotient, the others span the multiplicator.
-##
-InstallGlobalFunction( PQ_SP_QUOTIENT, function( datarec, Q )
-  local file, result, F, fpcgs, n, nat, P;
-
-  file := Filename( ANUPQData.tmpdir, "PQ_sp_pcp" );
-  PushOptions( rec(nonuser := true) );
-  PQ_WRITE_PC_PRESENTATION( datarec, file );
-  PopOptions();
-  result := PQ_READ_AS_FUNC_WITH_VARS( file, [ "F", "MapImages" ] );
-  F := result.F;
-  fpcgs := FamilyPcgs( F );
-  n := Length( Pcgs( Q ) );
-  nat := NaturalHomomorphismByNormalSubgroupNC( F,
-             SubgroupNC( F, fpcgs{[n + 1 .. Length( fpcgs )]} ) );
-  P := GroupByPcgs( PcgsByPcSequence( FamilyObj( One( Image( nat ) ) ),
-                        List( fpcgs{[1 .. n]}, x -> Image( nat, x ) ) ) );
-  if Size( P ) <> Size( Q ) then
-    Error( "option `pQuotient' is not the p-quotient of the group\n" );
-  fi;
-  return P;
-end );
-
-#############################################################################
-##
 #F  PQ_SP_STANDARD_PRESENTATION(<datarec>[,<mlist>] :<options>) SP menu opt 2
 ##
 ##  inputs data given by <options> to the `pq' binary to compute  a  standard
@@ -2633,12 +2673,18 @@ local datarec, savefile, Q;
                                    Filename( ANUPQData.tmpdir, "SPres" ) ),
                   "w", datarec);
   ##  `pq' reads the automorphisms in its own pcp of the p-quotient, which
-  ##  need not be the pcgs of `<datarec>.pQuotient': use that pcp's group.
+  ##  need not be the pcgs of `<datarec>.pQuotient', so take the
+  ##  automorphisms of the group of that pcp; the current pcp of `pq' is
+  ##  that of the p-cover
   if 1 = Length(arg) then
     if IsBound( datarec.setupfile ) then
       Q := datarec.pQuotient;
     else
-      Q := PQ_SP_QUOTIENT( datarec, datarec.pQuotient );
+      Q := GroupByPcgs( PQ_PCP_QUOTIENT( datarec,
+                            Length( Pcgs( datarec.pQuotient ) ) ).pcgs );
+      if Size( Q ) <> Size( datarec.pQuotient ) then
+        Error( "option `pQuotient' is not the p-quotient of the group\n" );
+      fi;
     fi;
   fi;
   PQ_MENU(datarec, "SP");

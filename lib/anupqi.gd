@@ -23,6 +23,12 @@ DeclareGlobalFunction( "PQ_AUT_GROUP" );
 
 #############################################################################
 ##
+#F  PQ_PCP_QUOTIENT( <datarec>, <n> ) . pq's pcp modulo its last generators
+##
+DeclareGlobalFunction( "PQ_PCP_QUOTIENT" );
+
+#############################################################################
+##
 #F  PQ_PCP_BASIS( <datarec> ) . . . . . . . pq's pcp in terms of the pc group
 ##
 DeclareGlobalFunction( "PQ_PCP_BASIS" );
@@ -479,6 +485,12 @@ DeclareGlobalFunction( "PqEchelonise" );
 
 #############################################################################
 ##
+#F  PQ_CHK_EXPONENT_AUTS( <datarec>, <mlist> ) . . auts enough for exponent?
+##
+DeclareGlobalFunction( "PQ_CHK_EXPONENT_AUTS" );
+
+#############################################################################
+##
 #F  PQ_SUPPLY_OR_EXTEND_AUTOMORPHISMS(<datarec>[,<mlist>])  A p-Q menu opt 18
 ##
 DeclareGlobalFunction( "PQ_SUPPLY_OR_EXTEND_AUTOMORPHISMS" );
@@ -640,12 +652,6 @@ DeclareGlobalFunction( "PqProcessRelationsFile" );
 #F  PqSPComputePcpAndPCover( : <options> )
 ##
 DeclareGlobalFunction( "PqSPComputePcpAndPCover" );
-
-#############################################################################
-##
-#F  PQ_SP_QUOTIENT( <datarec>, <Q> ) . . . . . pq's own pcp of the p-quotient
-##
-DeclareGlobalFunction( "PQ_SP_QUOTIENT" );
 
 #############################################################################
 ##
