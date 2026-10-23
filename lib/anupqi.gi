@@ -450,8 +450,10 @@ local gens, rels, p, fpgrp, iso, identities, pcgs, len, strp, i, j, Rel,
   # pq reads the name as a single token (it stops at white space) and names
   # the descendant files <name>_class<c> after it, so keep it to one token
   datarec.GroupName := List( datarec.GroupName,
-                             function(c) if c in " \t\n\r" then return '_'; fi;
-                                         return c; end );
+                             function( c )
+                               if c in " \t\n\r" then return '_'; fi;
+                               return c;
+                             end );
   ToPQk(datarec, ["name ",  datarec.GroupName], []);
   ToPQk(datarec, ["prime ", p], []);
   if identities then
