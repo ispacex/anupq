@@ -29,6 +29,7 @@
 #include "pq_functions.h"
 
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/wait.h>
 
 static int gz_mode = -1;
