@@ -57,7 +57,20 @@ void iteration(int call_depth,
       }
    }
 
-   descendant_file = OpenFile(name, "w+");
+   /* PQ_NOCLASSFILE (MATH-525): the caller asks for one class of
+      descendants only (GAP's PqDescendants with the default ClassBound), so
+      the capable descendants' p-covering groups that iteration would save on
+      <ident>_class<n> for the next class are never read back -- write them
+      to /dev/null instead of disk; should a next class be asked for after
+      all, stop with an error below rather than read an empty file */
+   if (getenv("PQ_NOCLASSFILE") != NULL) {
+      descendant_file = fopen("/dev/null", "w+");
+      if (descendant_file == NULL) {
+         perror("PQ_NOCLASSFILE: cannot open /dev/null");
+         exit(FAILURE);
+      }
+   } else
+      descendant_file = OpenFile(name, "w+");
 
    for (group_nmr = first; group_nmr <= nmr_of_descendants; ++group_nmr)
       next_class += construct(call_depth,
@@ -81,7 +94,12 @@ void iteration(int call_depth,
       t = (pga->terminal) ? "" : " capable";
       printf("%d%s group%s saved on file %s\n", next_class, t, s, name);
       if ((pcp->newgen == 0 && pcp->cc < class_bound - 1) ||
-          (pcp->newgen != 0 && pcp->cc < class_bound))
+          (pcp->newgen != 0 && pcp->cc < class_bound)) {
+         if (getenv("PQ_NOCLASSFILE") != NULL) {
+            fprintf(stderr, "PQ_NOCLASSFILE: the next class needs the "
+                            "descendants that were not saved; run without it\n");
+            exit(FAILURE);
+         }
          iteration(call_depth + 1,
                    step_sequence,
                    subgroup_rank,
@@ -92,6 +110,7 @@ void iteration(int call_depth,
                    order_bound,
                    pga,
                    pcp);
+      }
    } else
       CloseFile(descendant_file);
 }
