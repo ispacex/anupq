@@ -118,6 +118,14 @@ AC_SUBST(GMP_LDFLAGS)
 AC_SUBST(GMP_LIBS)
 
 dnl ##
+dnl ## zlib (optional): PQ_GZ=1 writes the descendants for GAP gzip-compressed
+dnl ## (src/GAP_library_file.c); without zlib pq refuses PQ_GZ=1
+dnl ##
+AC_CHECK_HEADER([zlib.h],
+    [AC_SEARCH_LIBS([gzopen], [z],
+        [AC_DEFINE([HAVE_ZLIB], [1], [Define if zlib is installed and usable])])])
+
+dnl ##
 dnl ## Checks for library functions.
 dnl ##
 AC_HEADER_SYS_WAIT

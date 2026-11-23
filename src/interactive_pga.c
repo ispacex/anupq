@@ -58,6 +58,8 @@ void interactive_pga(Logical group_present,
    list_interactive_pga_menu();
 
    do {
+      /* PQ_GZ: a construction is complete, end its gzip member before GAP reads it */
+      FinishGAPLibrary();
       option = read_option(MAX_INTERACTIVE_OPTION);
       switch (option) {
 

@@ -65,6 +65,8 @@ void pgroup_generation(Logical *group_present, struct pcp_vars *pcp)
    list_pga_menu();
 
    do {
+      /* PQ_GZ: a construction is complete, end its gzip member before GAP reads it */
+      FinishGAPLibrary();
       option = read_option(MAX_PGA_OPTION);
       switch (option) {
 

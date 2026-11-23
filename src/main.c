@@ -242,6 +242,8 @@ void CreateGAPLibraryFile(void)
       GAP_library = OpenFile(Group_library_file, "a+");
       fprintf(GAP_library, "ANUPQmagic := \"groups saved to file\";\n");
       CloseFile(GAP_library);
+      /* PQ_GZ: the descendants go to Group_library_file.gz (GAP_library_file.c) */
+      RemoveGAPLibraryCompressed(Group_library_file);
    }
 }
 
