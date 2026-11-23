@@ -6,64 +6,53 @@
 **
 **  With the environment variable PQ_GZ set to 1, the group descriptions and
 **  automorphisms that setup_reps writes for GAP go, instead of the file
-**  GAP_library (opened in mode "a+" for every descendant), to GAP_library.gz
-**  in the same directory: each write is collected in memory and appended to
-**  one zlib stream (level 1) that stays open while the descendants are
-**  constructed and is closed (gzip trailer written) when the construction
-**  menu option returns, and at exit.  The file is a valid gzip file at the
-**  point GAP reads it, and concatenated members (several constructions in one
-**  pq process) are again a valid gzip file; GAP reads it with InputTextFile on
-**  the .gz name.  Its content, decompressed, is byte for byte what the
-**  descendants part of GAP_library would have been.  The header line
-**  (ANUPQmagic) and the standard presentation output stay in GAP_library.
+**  GAP_library (opened in mode "a+" for every item), into a pipe to one
+**  "gzip -1" process appending to GAP_library.gz in the same directory.  The
+**  pipe stays open while the descendants are constructed and is closed (gzip
+**  ends its member and exits; pclose waits for it) when the construction menu
+**  option returns, i.e. before pq prompts GAP again, and at exit.  So the file
+**  is a complete gzip file at the point GAP reads it; concatenated members
+**  (several constructions in one pq process) are again a gzip file, which GAP
+**  reads with InputTextFile on the .gz name.  Decompressed, it is byte for
+**  byte what the descendants part of GAP_library would have been.  The header
+**  line (ANUPQmagic) and the standard presentation output stay in GAP_library.
 **
-**  Without PQ_GZ nothing changes: OpenGAPLibrary is OpenFile(name, "a+").
+**  Without PQ_GZ nothing changes: OpenGAPLibrary is OpenFile(name, "a+") and
+**  CloseGAPLibrary is CloseFile.
 **
-**  On a heavy vertex (MATH-525) GAP_library is tens of GB of text that
-**  compresses about tenfold.
+**  On the heavy vertices of the dimension-subrings 2^12 search GAP_library is
+**  tens of GB of text (MATH-525).
 */
 
 #include "pq_defs.h"
 #include "constants.h"
 #include "pq_functions.h"
 
-#if defined(HAVE_ZLIB)
-#include <zlib.h>
-#endif
+#include <fcntl.h>
+#include <sys/wait.h>
 
 static int gz_mode = -1;
+static FILE *gz_pipe = NULL;
+static char *gz_name = NULL;
 
 int GAPLibraryCompressed(void)
 {
    if (gz_mode < 0) {
       const char *e = getenv("PQ_GZ");
       gz_mode = (e != NULL && strcmp(e, "1") == 0);
-#if !defined(HAVE_ZLIB)
-      if (gz_mode) {
-         fprintf(stderr, "PQ_GZ=1 but pq was built without zlib\n");
-         exit(FAILURE);
-      }
-#endif
    }
    return gz_mode;
 }
 
-#if defined(HAVE_ZLIB)
-
-static gzFile gz_out = NULL;
-static char *gz_name = NULL;
-static char *gz_buf = NULL;
-static size_t gz_len = 0;
-
-static void finish_at_exit(void);
-
-static void gz_fail(const char *what)
+static char *gz_file_name(const char *name)
 {
-   int err = 0;
-   const char *msg = gz_out != NULL ? gzerror(gz_out, &err) : "";
-   fprintf(stderr, "pq: %s %s failed: %s\n", what, gz_name ? gz_name : "", msg);
-   perror(NULL);
-   exit(FAILURE);
+   char *s = malloc(strlen(name) + 4);
+   if (s == NULL) {
+      perror(NULL);
+      exit(FAILURE);
+   }
+   sprintf(s, "%s.gz", name);
+   return s;
 }
 
 /* remove a stale compressed library (GAP empties GAP_library at the start
@@ -74,58 +63,81 @@ void RemoveGAPLibraryCompressed(const char *name)
    char *s;
    if (!GAPLibraryCompressed())
       return;
-   s = malloc(strlen(name) + 4);
-   if (s == NULL) {
-      perror(NULL);
-      exit(FAILURE);
-   }
-   sprintf(s, "%s.gz", name);
+   s = gz_file_name(name);
    unlink(s);
    free(s);
 }
 
-#else
-
-void RemoveGAPLibraryCompressed(const char *name)
+static int finish(void)
 {
-   (void)GAPLibraryCompressed();
+   int r = 0;
+   if (gz_pipe != NULL) {
+      int status = pclose(gz_pipe);
+      gz_pipe = NULL;
+      if (status == -1 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
+         fprintf(stderr, "pq: gzip -1 >> %s failed (status %d)\n", gz_name,
+                 status);
+         r = -1;
+      }
+   }
+   return r;
 }
 
-#endif
+static void finish_at_exit(void)
+{
+   (void)finish();
+}
 
 /* open the GAP library file name for appending one item */
 
 FILE *OpenGAPLibrary(const char *name)
 {
+   char *s, *cmd;
+   const char *q;
+
    if (!GAPLibraryCompressed())
       return OpenFile(name, "a+");
 
-#if defined(HAVE_ZLIB)
-   if (gz_name == NULL || strlen(gz_name) != strlen(name) + 3 ||
-       strncmp(gz_name, name, strlen(name)) != 0) {
-      FinishGAPLibrary();
-      free(gz_name);
-      gz_name = malloc(strlen(name) + 4);
-      if (gz_name == NULL) {
-         perror(NULL);
+   s = gz_file_name(name);
+   if (gz_pipe != NULL && strcmp(s, gz_name) == 0) {
+      free(s);
+      return gz_pipe;
+   }
+   FinishGAPLibrary();
+   free(gz_name);
+   gz_name = s;
+
+   for (q = gz_name; *q; ++q)
+      if (*q == '\'') {
+         fprintf(stderr, "pq: PQ_GZ: quote in file name %s\n", gz_name);
          exit(FAILURE);
       }
-      sprintf(gz_name, "%s.gz", name);
+   cmd = malloc(strlen(gz_name) + 32);
+   if (cmd == NULL) {
+      perror(NULL);
+      exit(FAILURE);
    }
+   sprintf(cmd, "exec gzip -1 >> '%s'", gz_name);
+   fflush(NULL);
+   gz_pipe = popen(cmd, "w");
+   free(cmd);
+   if (gz_pipe == NULL) {
+      perror("pq: PQ_GZ: popen gzip");
+      exit(FAILURE);
+   }
+   /* not inherited by the processes pq starts later (GAP for stabilisers) */
+   fcntl(fileno(gz_pipe), F_SETFD, FD_CLOEXEC);
    {
-      FILE *fp = open_memstream(&gz_buf, &gz_len);
-      if (fp == NULL) {
-         perror("open_memstream");
-         exit(FAILURE);
+      static int registered = 0;
+      if (!registered) {
+         atexit(finish_at_exit);
+         registered = 1;
       }
-      return fp;
    }
-#else
-   return NULL;
-#endif
+   return gz_pipe;
 }
 
-/* close the item opened by OpenGAPLibrary: append it to the library */
+/* close the item opened by OpenGAPLibrary */
 
 void CloseGAPLibrary(FILE *fp)
 {
@@ -133,38 +145,10 @@ void CloseGAPLibrary(FILE *fp)
       CloseFile(fp);
       return;
    }
-
-#if defined(HAVE_ZLIB)
-   {
-      size_t done = 0;
-      CloseFile(fp); /* fixes gz_buf and gz_len */
-      if (gz_len > 0) {
-         if (gz_out == NULL) {
-            static int registered = 0;
-            gz_out = gzopen(gz_name, "ab1");
-            if (gz_out == NULL)
-               gz_fail("gzopen");
-            if (!registered) {
-               atexit(finish_at_exit);
-               registered = 1;
-            }
-         }
-         while (done < gz_len) {
-            size_t n = gz_len - done;
-            int w;
-            if (n > (1u << 30))
-               n = 1u << 30;
-            w = gzwrite(gz_out, gz_buf + done, (unsigned)n);
-            if (w <= 0)
-               gz_fail("gzwrite");
-            done += (size_t)w;
-         }
-      }
-      free(gz_buf);
-      gz_buf = NULL;
-      gz_len = 0;
+   if (ferror(fp)) {
+      fprintf(stderr, "pq: PQ_GZ: write to gzip -1 >> %s failed\n", gz_name);
+      exit(FAILURE);
    }
-#endif
 }
 
 /* end the gzip member written so far (a no-op without PQ_GZ): called when
@@ -172,27 +156,6 @@ void CloseGAPLibrary(FILE *fp)
 
 void FinishGAPLibrary(void)
 {
-#if defined(HAVE_ZLIB)
-   if (gz_out != NULL) {
-      int r = gzclose(gz_out);
-      gz_out = NULL;
-      if (r != Z_OK) {
-         fprintf(stderr, "pq: gzclose %s failed (%d)\n", gz_name, r);
-         exit(FAILURE);
-      }
-   }
-#endif
+   if (finish() != 0)
+      exit(FAILURE);
 }
-
-#if defined(HAVE_ZLIB)
-/* at exit: the same, but without calling exit again */
-static void finish_at_exit(void)
-{
-   if (gz_out != NULL) {
-      int r = gzclose(gz_out);
-      gz_out = NULL;
-      if (r != Z_OK)
-         fprintf(stderr, "pq: gzclose %s failed (%d)\n", gz_name, r);
-   }
-}
-#endif
