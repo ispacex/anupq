@@ -42,6 +42,7 @@ pq_SOURCES = \
     src/Extend_Auts.c \
     src/FreeSpace.c \
     src/GAP.c \
+    src/GAP_library_file.c \
     src/GAP_link_via_file.c \
     src/GAP_present.c \
     src/OpenFile.c \

@@ -186,11 +186,11 @@ void process_rep(int **perms,
       if (pga->capable || pga->terminal) {
          if (Group_library == GAP_LIBRARY) {
             if (Group_library_file != NULL)
-               GAP_library = OpenFile(Group_library_file, "a+");
+               GAP_library = OpenGAPLibrary(Group_library_file);
             else
-               GAP_library = OpenFile("GAP_library", "a+");
+               GAP_library = OpenGAPLibrary("GAP_library");
             write_GAP_library(GAP_library, pcp);
-            CloseFile(GAP_library);
+            CloseGAPLibrary(GAP_library);
          }
       }
 
@@ -242,9 +242,9 @@ void process_rep(int **perms,
    if (pga->final_stage && (pga->capable || pga->terminal) &&
        getenv("PQ_NOSTAB") == NULL) {
       if (Group_library == GAP_LIBRARY) {
-         GAP_library = OpenFile("GAP_library", "a+");
+         GAP_library = OpenGAPLibrary("GAP_library");
          GAP_auts(GAP_library, central, stabiliser, pga, pcp);
-         CloseFile(GAP_library);
+         CloseGAPLibrary(GAP_library);
       }
    }
 
